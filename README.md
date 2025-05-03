@@ -1,6 +1,7 @@
 # File-System
 Current TO DOS:
 1. Need to create sort system, either into sort into cache, or sort then into cache
+2. Handle extensions with multiple '.'
 3. Figure out key method for caching
 4. QT framework
 5. Figure out whether to store filters in another cache
@@ -27,3 +28,5 @@ SectionHeader[1]:
     count 1200
 SectionHeader[2]:
     etc...
+
+Possible section with directories keyed, each diretory holds some link to the files (maybe reference back to "all" section?) in the directory. So when user requests to see other files in directory, just hash the dir name and use that section to find all other files, then load and show to user.
