@@ -45,7 +45,7 @@ void Foldirs::AddToDB(Database*& db, const char* dirname, const char* filename){
         return;
     }
     //std::cout << "Opening: " << path << std::endl;
-    if(stat(path, &info) == 0){
+    if(lstat(path, &info) == 0){ //lstat instead of stat for symblink prevention
         if(S_ISREG(info.st_mode)){ //only copy files
             db[currentsize].type = file;
             strcpy(db[currentsize].filedir.Directory, dirname);
@@ -113,7 +113,3 @@ void Foldirs::PrintDatabase(){
         std::cout << db[i].filedir.Directory << '/' << db[i].filedir.FileName << '\n';
     }
 }
-//void Foldirs::EntryRoom(Entry& entry){
-//    entry.Directory = new char[MAX_DIRECTORY];
-//    entry.FileName = new char[MAX_FILENAME];
-//}
