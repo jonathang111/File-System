@@ -1,6 +1,8 @@
-#ifndef FILEREAD
-#define FILEREAD
+ //this file should store structs, enums, etc that will be generally common
+#ifndef GENERALITEMS
+#define GENERALITEMS
 
+#include <chrono>
 #include <cstring>
 //#include <filesystem> //maybe for winodws?
 #include <dirent.h>
@@ -12,6 +14,7 @@
 #define MAX_DIRECTORY 256
 #define MAX_FILENAME 128
 #define MAX_DBCHUNK 1024
+#define MAX_EXTENSION 32
 
 #define REDUNFILES(x) strcmp(x, ".") == 0 || strcmp(x, "..") == 0
 
@@ -24,10 +27,12 @@ typedef enum{
 struct Entry{
     char* Directory;
     char* FileName;
+    char* FileExtension;
 
     Entry(){
         Directory = new char[MAX_DIRECTORY];
         FileName = new char[MAX_FILENAME];
+        FileExtension = new char[MAX_EXTENSION];
     }
 };
 
@@ -37,32 +42,4 @@ struct Database{
     int maxSize;
     int currentSize;
 };
-
-//implement a class with these functions.
-
-class Foldirs{
-    private:
-    Database* db;
-
-    //AUX functions
-    int AppendPath(const char* dir, const char* filename, char* out);
-    void ClearChunk(Database*&, int);
-    void IncreaseDB(Database*&);
-
-    //main functions
-    Database* InitalizeDatabase();
-    void AddToDB(Database*&, const char*, const char*);
-    void ReadDirectory(Database*&, const char*);
-
-    public:
-    Foldirs(const char* rd){
-        db = InitalizeDatabase();
-        ReadDirectory(db, rd);
-    }
-    
-    Database* getDatabase();
-    void PrintSize();
-    void PrintDatabase();
-};
-
 #endif

@@ -50,6 +50,8 @@ void Foldirs::AddToDB(Database*& db, const char* dirname, const char* filename){
             db[currentsize].type = file;
             strcpy(db[currentsize].filedir.Directory, dirname);
             strcpy(db[currentsize].filedir.FileName, filename);
+            const char* temp = GetExtension(filename);
+            strncpy(db[currentsize].filedir.FileExtension, temp, MAX_EXTENSION);//NULL of ext too long
             db->currentSize++;
         }
         else if(S_ISDIR(info.st_mode))ReadDirectory(db, path);
@@ -66,18 +68,20 @@ void Foldirs::AddToDB(Database*& db, const char* dirname, const char* filename){
 //AUX functions
 void Foldirs::IncreaseDB(Database* &db){
     Database* temp = new Database[db->currentSize + MAX_DBCHUNK];
+    Database* temp2 = db;
     ClearChunk(temp, db->currentSize);
     memcpy(temp, db, (sizeof(Database) * db->currentSize));
     temp->currentSize = db->currentSize;
     temp->maxSize = db->maxSize + MAX_DBCHUNK;
     db = temp;
+    delete[] temp2; //handle chars in entry?
 }
 
 int Foldirs::AppendPath(const char* dir, const char* filename, char* out){ //need to add error handling
     size_t len = 0;
     if(dir && *dir){ 
         /*dir, pointers returns false if null, 
-        *dir dereferenced, if empty, i.e. no char in first positoin, return false*/
+        *dir dereferenced, if empty, i.e. no char in first position, return false*/
         len = std::snprintf(out, MAX_PATHSIZE, "%s", dir); // copy to buff
         if(out[len-1] != '/' && len + 1 < MAX_PATHSIZE){
             out[len++] = '/';
@@ -102,6 +106,13 @@ void Foldirs::ClearChunk(Database*& input, int size){
     }
 }
 
+const char* Foldirs::GetExtension(const char* filename){
+    const char* temp = strrchr(filename, '.');
+    if(!temp || temp == filename || strlen(temp) >= MAX_EXTENSION) return "NULL";
+    return temp + 1;
+
+}
+
 //Public functions
 Database* Foldirs::getDatabase(){
     return db;
@@ -113,7 +124,7 @@ void Foldirs::PrintSize(){
 
 void Foldirs::PrintDatabase(){
     for(int i = 0; i < db->currentSize; i++){
-        std::cout << "File Type: " << db[i].type << ' ';
+        std::cout << "File Type: " << db[i].type << ' ' << "Extension: " << db[i].filedir.FileExtension << ' ';
         std::cout << db[i].filedir.Directory << '/' << db[i].filedir.FileName << '\n';
     }
 }
