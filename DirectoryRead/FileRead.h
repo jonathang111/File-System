@@ -44,13 +44,14 @@ class Foldirs{
     private:
     Database* db;
 
+    //AUX functions
     int AppendPath(const char* dir, const char* filename, char* out);
     void ClearChunk(Database*&, int);
-    //void EntryRoom(Entry&);
+    void IncreaseDB(Database*&);
 
+    //main functions
     Database* InitalizeDatabase();
     void AddToDB(Database*&, const char*, const char*);
-    void IncreaseDB(Database*&);
     void ReadDirectory(Database*&, const char*);
 
     public:
@@ -59,6 +60,7 @@ class Foldirs{
         ReadDirectory(db, rd);
     }
     
+    Database* getDatabase();
     void PrintSize();
     void PrintDatabase();
 };

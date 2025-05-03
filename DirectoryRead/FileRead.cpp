@@ -103,6 +103,10 @@ void Foldirs::ClearChunk(Database*& input, int size){
 }
 
 //Public functions
+Database* Foldirs::getDatabase(){
+    return db;
+}
+
 void Foldirs::PrintSize(){
     std::cout << db->currentSize << "\n";
 }
