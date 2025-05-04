@@ -32,3 +32,6 @@ SectionHeader[2]:
 Possible section with directories keyed, each diretory holds some link to the files (maybe reference back to "all" section?) in the directory. So when user requests to see other files in directory, just hash the dir name and use that section to find all other files, then load and show to user.
 
 Another problem is when the WSL needs to access mnt/whatever; at this point it needs to go through multiple virtual layers leading to higher latency when using lstat or opendir.
+
+One idea to improve the speed of database scanning on WSLs is to use multithreading. 
+Instead of having the database recursively open directories and scan, I could instead place it into a thread-safe queue and let other cores scan the file independently. Would need mutex to gaurd the DB since it would be a shared space.
