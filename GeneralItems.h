@@ -28,12 +28,6 @@ struct Entry{
     char* Directory;
     char* FileName;
     char* FileExtension;
-
-    Entry(){
-        Directory = new char[MAX_DIRECTORY];
-        FileName = new char[MAX_FILENAME];
-        FileExtension = new char[MAX_EXTENSION];
-    }
 };
 
 struct Database{

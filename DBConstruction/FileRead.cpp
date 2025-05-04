@@ -3,7 +3,8 @@
 Database* Foldirs::InitalizeDatabase(){
     Database* db = new Database[MAX_DBCHUNK];
     ClearChunk(db, 0);
-    //EntryRoom(db->filedir);
+    for(int i = 0; i < MAX_DBCHUNK; i++)
+        EntryAllocate(db[i].filedir);
     db->currentSize = 0;
     db->maxSize = 1024;
     return db;
@@ -17,7 +18,6 @@ void Foldirs::ReadDirectory(Database*& db, const char* dirname){
     }
     //std::cout << "successful directory open...\n";
     struct dirent* file = readdir(Directory);
-    const char* filename = file->d_name;
     while(file){
         if(REDUNFILES(file->d_name)){
             file = readdir(Directory);
@@ -31,10 +31,8 @@ void Foldirs::ReadDirectory(Database*& db, const char* dirname){
 
 void Foldirs::AddToDB(Database*& db, const char* dirname, const char* filename){
     int currentsize = db->currentSize;
-    if(currentsize == db->maxSize){
+    if(currentsize == db->maxSize)
         IncreaseDB(db);
-    }
-
     struct stat info;
     int error;
     char* path = new char[MAX_PATHSIZE];
@@ -66,15 +64,18 @@ void Foldirs::AddToDB(Database*& db, const char* dirname, const char* filename){
 
 
 //AUX functions
-void Foldirs::IncreaseDB(Database* &db){
-    Database* temp = new Database[db->currentSize + MAX_DBCHUNK];
+void Foldirs::IncreaseDB(Database* &db){ //problem here
+    Database* temp = new Database[db->currentSize + MAX_DBCHUNK];;
     Database* temp2 = db;
     ClearChunk(temp, db->currentSize);
+    for(int i = db->currentSize; i < MAX_DBCHUNK + db->currentSize; i++)
+        EntryAllocate(temp[i].filedir);
+
     memcpy(temp, db, (sizeof(Database) * db->currentSize));
     temp->currentSize = db->currentSize;
     temp->maxSize = db->maxSize + MAX_DBCHUNK;
     db = temp;
-    delete[] temp2; //handle chars in entry?
+    delete[] temp2; //double free
 }
 
 int Foldirs::AppendPath(const char* dir, const char* filename, char* out){ //need to add error handling
@@ -110,7 +111,12 @@ const char* Foldirs::GetExtension(const char* filename){
     const char* temp = strrchr(filename, '.');
     if(!temp || temp == filename || strlen(temp) >= MAX_EXTENSION) return "NULL";
     return temp + 1;
+}
 
+void Foldirs::EntryAllocate(Entry& entry){
+    entry.Directory = new char[MAX_DIRECTORY];
+    entry.FileName = new char[MAX_FILENAME];
+    entry.FileExtension = new char[MAX_EXTENSION];
 }
 
 //Public functions

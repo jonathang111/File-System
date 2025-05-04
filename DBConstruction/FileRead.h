@@ -11,7 +11,8 @@ class Foldirs{
     void ClearChunk(Database*&, int);
     void IncreaseDB(Database*&);
     char const* GetExtension(const char*);
-
+    void EntryAllocate(Entry&);
+    
     //main functions
     Database* InitalizeDatabase();
     void AddToDB(Database*&, const char*, const char*);

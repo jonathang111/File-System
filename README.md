@@ -30,3 +30,5 @@ SectionHeader[2]:
     etc...
 
 Possible section with directories keyed, each diretory holds some link to the files (maybe reference back to "all" section?) in the directory. So when user requests to see other files in directory, just hash the dir name and use that section to find all other files, then load and show to user.
+
+Another problem is when the WSL needs to access mnt/whatever; at this point it needs to go through multiple virtual layers leading to higher latency when using lstat or opendir.
