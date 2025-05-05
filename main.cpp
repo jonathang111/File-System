@@ -1,4 +1,5 @@
 #include "DBConstruction/FileRead.h"
+#include "DBCache/DBCache.h"
 
 int main(){
     std::cout << "starting read..." << std::endl;
@@ -13,6 +14,7 @@ int main(){
     std::cout << "Files stored: ";
     test.PrintSize();
     std::cout << "Time Reading Files: " << elapsed.count() << std::endl;
-
-    
+    Database* temp = test.getDatabase();
+    std::cout << "sorting data" << std::endl;
+    SortDB(fileType, temp);
 }
