@@ -8,7 +8,9 @@ typedef enum{
     fileSize = 3
 } SortType;
 
-void SortDB(SortType, Datbase*&);
+void SortDB(SortType, Database*&);
+std::unordered_map<std::string, std::vector<Entry>> MapExtensions(Database*&);
+//void sortMap(std::unordered_map);
 void ToPOD(Entry);
 void LoadToARR();
 #endif
