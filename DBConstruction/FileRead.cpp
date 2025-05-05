@@ -3,8 +3,7 @@
 Database* Foldirs::InitalizeDatabase(){
     Database* db = new Database[MAX_DBCHUNK];
     ClearChunk(db, 0);
-    for(int i = 0; i < MAX_DBCHUNK; i++)
-        EntryAllocate(db[i].filedir);
+    EntryAllocate(db, 0, MAX_DBCHUNK);
     db->currentSize = 0;
     db->maxSize = 1024;
     return db;
@@ -64,18 +63,18 @@ void Foldirs::AddToDB(Database*& db, const char* dirname, const char* filename){
 
 
 //AUX functions
-void Foldirs::IncreaseDB(Database* &db){ //problem here
+void Foldirs::IncreaseDB(Database* &db){ //figure out the mem management
     Database* temp = new Database[db->currentSize + MAX_DBCHUNK];;
     Database* temp2 = db;
-    ClearChunk(temp, db->currentSize);
-    for(int i = db->currentSize; i < MAX_DBCHUNK + db->currentSize; i++)
-        EntryAllocate(temp[i].filedir);
 
+    ClearChunk(temp, db->currentSize);
+    EntryAllocate(temp, db->currentSize, MAX_DBCHUNK + db->currentSize);
     memcpy(temp, db, (sizeof(Database) * db->currentSize));
+
     temp->currentSize = db->currentSize;
     temp->maxSize = db->maxSize + MAX_DBCHUNK;
     db = temp;
-    delete[] temp2; //double free
+    delete[] temp2; //does NOT delete old char* pointers in entry, so keep using memcpy, far faster
 }
 
 int Foldirs::AppendPath(const char* dir, const char* filename, char* out){ //need to add error handling
@@ -113,10 +112,12 @@ const char* Foldirs::GetExtension(const char* filename){
     return temp + 1;
 }
 
-void Foldirs::EntryAllocate(Entry& entry){
-    entry.Directory = new char[MAX_DIRECTORY];
-    entry.FileName = new char[MAX_FILENAME];
-    entry.FileExtension = new char[MAX_EXTENSION];
+void Foldirs::EntryAllocate(Database*& db, int start, int end){
+    for(int i = start; i < end; i++){
+        db[i].filedir.Directory = new char[MAX_DIRECTORY];
+        db[i].filedir.FileName = new char[MAX_FILENAME];
+        db[i].filedir.FileExtension = new char[MAX_EXTENSION];
+    }
 }
 
 //Public functions

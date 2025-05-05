@@ -9,6 +9,7 @@ Current TO DOS:
 
 Finished TO DOS:
 - symlink issues, fixed using lstat() instead
+- memleak
 - database creation
 
 Notes:
