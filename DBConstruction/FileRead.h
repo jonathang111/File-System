@@ -14,13 +14,13 @@ class Foldirs{
     void EntryAllocate(Database*&, int, int);
     
     //main functions
-    Database* InitalizeDatabase();
+    Database* InitializeDatabase();
     void AddToDB(Database*&, const char*, const char*);
     void ReadDirectory(Database*&, const char*);
 
     public:
     Foldirs(const char* rd){
-        db = InitalizeDatabase();
+        db = InitializeDatabase();
         ReadDirectory(db, rd);
     }
     

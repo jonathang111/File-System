@@ -1,6 +1,6 @@
 #include "FileRead.h"
 //Main functions
-Database* Foldirs::InitalizeDatabase(){
+Database* Foldirs::InitializeDatabase(){
     Database* db = new Database[MAX_DBCHUNK];
     ClearChunk(db, 0);
     EntryAllocate(db, 0, MAX_DBCHUNK);
