@@ -20,5 +20,15 @@ int main(){
     std::cout << "sorting data" << std::endl;
     SortDB(fileType, temp);
 
-    ReadFromCache<std::string>(temp);
+    auto result = CacheRW::ReadCacheMetaData<std::string>();
+    if(result){
+        CacheRW::CacheDB temp = *result;
+            std::cout << "Key amount: "<< temp.keyamt << std::endl;
+        for(int i = 0; i < temp.keyamt; i++)
+            std::cout << temp.keys[i];
+        std::cout << std::endl;
+    }
+    else{
+        std::cerr << "failled to open cache file\n";
+    }
 }

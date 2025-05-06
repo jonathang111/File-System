@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 #include <fstream>
-
+#include <optional>
 
 #define MAX_PATHSIZE 512
 #define MAX_DIRECTORY 256
@@ -39,5 +39,11 @@ struct Database{
     Entry filedir; //directory
     int maxSize;
     int currentSize;
+};
+
+class CacheDB{
+    private:
+    int keyamt, entryamt, date;
+    float version;
 };
 #endif
