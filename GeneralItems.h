@@ -10,13 +10,15 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
 
-//may have to adjust the char sizes once expanding to root dir start.
+
 #define MAX_PATHSIZE 512
 #define MAX_DIRECTORY 256
 #define MAX_FILENAME 128
 #define MAX_DBCHUNK 4096
 #define MAX_EXTENSION 32
+#define MAX_KEYSIZE 15
 
 #define REDUNFILES(x) strcmp(x, ".") == 0 || strcmp(x, "..") == 0
 

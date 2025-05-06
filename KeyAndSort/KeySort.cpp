@@ -11,8 +11,9 @@ void SortDB(SortType type, Database*& db){
         for(auto it = map.begin(); it != map.end(); it++)
             std::cout << it->first << ", ";
     std::cout << std::endl;
+    LoadToCache<std::string>(db, map);
 }
 
-std::string keytest(Entry ent){
-    return ent.FileExtension;
+std::string keytest(Database db){
+    return db.filedir.FileExtension;
 }
