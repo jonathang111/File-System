@@ -9,7 +9,7 @@ void SortDB(SortType type, Database*& db){
     };
     
     if(!map.empty())
-        CacheRW::LoadToCache<std::string>(db, map);
+        CacheRW::LoadToCache<std::string, Entry>(map, "dbcachetest.bin");
 }
 
 std::string keytest(Database db){

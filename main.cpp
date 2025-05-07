@@ -1,12 +1,12 @@
 #include "CacheReadWrite/CacheRW.h"
 #include "DBConstruction/FileRead.h"
 #include "KeyAndSort/KeySort.h"
-
+//if using mac compile with c++17, use clang++ -std=c++17, i will be working on  make file tho
 int main(){
     std::cout << "starting read..." << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    Foldirs test("/lib");
+    Foldirs test("/Library");
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
 
@@ -20,15 +20,23 @@ int main(){
     std::cout << "sorting data" << std::endl;
     SortDB(fileType, temp);
 
-    auto result = CacheRW::ReadCacheMetaData<std::string>();
-    if(result){
+    auto result = CacheRW::ReadCacheMetaData<std::string, Entry>("dbcachetest.bin");
+    if(result.has_value()){
         CacheRW::CacheDB temp = *result;
-            std::cout << "Key amount: "<< temp.keyamt << std::endl;
+        std::cout << "Key amount: "<< temp.keyamt << std::endl;
         for(int i = 0; i < temp.keyamt; i++)
-            std::cout << temp.keys[i];
-        std::cout << std::endl;
+           std::cout << temp.keys[i];
+        std::cout << std::endl << std::endl << temp.keys[0];
+        std::cout << " Entries: ";
+        auto result2 = CacheRW::ReadKeyValues<Entry>(temp.keys[0], "dbcachetest.bin");
+        if(result2){
+            Entry* entries = *result2;
+            for(int i = 0; i < temp.keys[0].count; i++)
+                std::cout << entries[i].FileName << ", ";
+        }
     }
     else{
         std::cerr << "failled to open cache file\n";
     }
+    std::cout << std::endl;
 }
