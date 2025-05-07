@@ -1,8 +1,9 @@
 #pragma once
 #ifndef CACHERW_H
 #define CACHERW_H
-#define MAX_KEYSIZE 15
-
+#define MAX_KEYSIZE 20
+#define BLOCK_SIZE 4096
+#define GROWTH_FACTOR 1.5
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -17,6 +18,7 @@ struct CacheHeader{
     int entryamt;
     float version;
     int date;
+    int footerStart;
 };
 
 struct KeyIndexEntry{
@@ -31,20 +33,24 @@ struct CacheDB{
     int entryamt; 
     int date;
     float version;
+    int footerStart;
     KeyIndexEntry* keys;
 
     CacheDB(CacheHeader meta)
-    : keyamt(meta.keyamt), entryamt(meta.entryamt), date(meta.date), version(meta.version){
+    : keyamt(meta.keyamt), entryamt(meta.entryamt), date(meta.date)
+    , version(meta.version), footerStart(meta.footerStart){
         keys = new KeyIndexEntry[keyamt];
         strcpy(tag, meta.tag);
     }
 };
 
+size_t ComputeOffset(size_t EntryEnd);
+
 template<typename keyType, typename valueType>
 void LoadToCache(std::unordered_map<keyType, std::vector<valueType>> map, const char* cacheFile){
     int keycount = map.size();
     std::ofstream file(cacheFile, std::ios::binary);
-    CacheHeader header = {"CT2", keycount, 0, 0.2, 05062025};
+    CacheHeader header = {"CL3", keycount, 0, 0.3, 05062025, 0};
     size_t currentoffset = sizeof(CacheHeader) + sizeof(KeyIndexEntry) * keycount;
     KeyIndexEntry* keyentries = new KeyIndexEntry[keycount];
 
@@ -52,8 +58,16 @@ void LoadToCache(std::unordered_map<keyType, std::vector<valueType>> map, const 
         int p = 0;
         for(auto it = map.begin(); it != map.end(); it++, p++){
             file.seekp(currentoffset);
+            if constexpr (std::is_same<keyType, char>::value){
+                keyentries[p].key[0] = it->first;
+                keyentries[p].key[1] = '\0';
+            }
+            else{
             strncpy(keyentries[p].key, it->first.c_str(), MAX_KEYSIZE);
-            keyentries[p].key[MAX_KEYSIZE - 1] = '\0';
+            keyentries[p].key[MAX_KEYSIZE-1] = '\0';
+            }
+
+            //keyentries[p].key[MAX_KEYSIZE - 1] = '\0';
             keyentries[p].offset = currentoffset;
             keyentries[p].count = it->second.size();
             header.entryamt += it->second.size();
@@ -62,9 +76,10 @@ void LoadToCache(std::unordered_map<keyType, std::vector<valueType>> map, const 
                 currentoffset += sizeof(valueType);
             }
         }
+        header.footerStart = ComputeOffset(currentoffset);
         file.seekp(0);
         file.write(reinterpret_cast<const char*>(&header), sizeof(CacheHeader));
-        file.seekp(sizeof(CacheHeader), std::ios::beg);
+        file.seekp(header.footerStart);
         file.write(reinterpret_cast<const char*>(keyentries), keycount * sizeof(KeyIndexEntry));
         file.close();
     }
@@ -86,10 +101,8 @@ auto ReadCacheMetaData(const char* cacheFile)
         file.read(reinterpret_cast<char*>(&header), sizeof(CacheHeader)); //read header
         CacheDB output(header);
 
-        for(int i = 0; i < header.keyamt; i++){
-            file.read(reinterpret_cast<char*>(&keyindex), sizeof(KeyIndexEntry)); //read all key indecies
-            output.keys[i] = keyindex;
-        }
+        file.seekg(output.footerStart);
+        file.read(reinterpret_cast<char*>(output.keys), sizeof(KeyIndexEntry)*header.keyamt); //read all key indecies
 
         file.close();
         return output;
@@ -124,10 +137,10 @@ auto ReadKeyValues(KeyIndexEntry keyIndex, const char* cacheFile)
     }
     std::cout << "Could not open " << cacheFile << std::endl;
     return {};
+
 } 
 
 std::ostream& operator<<(std::ostream& os, const KeyIndexEntry& entry);
-
 }
 
 #endif

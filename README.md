@@ -19,18 +19,29 @@ Cache Layout:
 CacheHeader:
     tag: "CBFE"         // Cache tag, use to verify correct cache type/filter
     key amount:         // the amount of keys in the cache, also how many key indices
+	offset to keyindx:	// Absolute offset to the footer/key index start
     entry amount:       // the amount of entries in the cache
     version:            //just the version of the cache, possible used to auto update cache?
     date:               //date of cache creation
-KeyIndexEntry:
-    key[MAX_KEYSIZE]:   //key name, maybe varies on cache or standardized
-    offset:             //offset in cache of key values
-    count:              //number of values in the key
+
 Entries:
-    //Entries start at sizeof(header) * sizeof(KeyIndexEntry) * key amount
+    //Entries start at sizeof(header)
     //these entries will be stored in conotinous blocks,
     // so keeping track of offset and size while reading is vital
 
+[padding/gap]	//should have enough room between entries and keyindex's so rewrites aren't common
+
+KeyIndexEntry[0]:
+    key[MAX_KEYSIZE]:   //key name, maybe varies on cache or standardized
+    offset:             //offset in cache of key values
+    count:              //number of values in the key
+KeyIndexEntry[1]:
+	key[MAX_KEYSIZE]:  
+    offset:         
+    count:              
+...
+
+Idea being that you can dynamically add new keys if need and also dynamically store the entries in the middle with possible rewrite of footing (this should be rare). This method is better since a linked list logic would require linear search every time you want to locate some key.
 
 For now all filters should have their own cache. In order to link them however, such as wanting to find pdf in /Desktop, i can create a intersect function that will compare two different databases
 

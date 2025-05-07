@@ -1,17 +1,37 @@
 #include "KeySort.h"
+//possibly introduce the use of an ordered map for lexical?
 
-void SortDB(SortType type, Database*& db){
-    std::unordered_map<std::string, std::vector<Entry>> map;
-    switch(type){
-        //case lexical: 
-        case fileType: map = GroupEntries(db, keytest); break;
-        //case fileSize:
-    };
-    
-    if(!map.empty())
-        CacheRW::LoadToCache<std::string, Entry>(map, "dbcachetest.bin");
+namespace KeySort::Support{
+
+    void SortkeybyLexical(std::unordered_map<char, std::vector<Entry>>& map){ //work in progress
+
+    }
+
+    void SortvalbyLexical(std::unordered_map<char, std::vector<Entry>>& map){
+        for(auto& [ch, vec] : map){
+            std::sort(vec.begin(), vec.end(), [](const Entry& a, const Entry& b){
+                std::string fileA(a.FileName);
+                std::string fileB(b.FileName);
+
+                auto found = fileA.find('.');
+                auto found2 = fileB.find('.');
+                fileA.substr(0, found);
+                fileB.substr(0,found2);
+                return fileA < fileB;
+            });
+        }
+    }
+
 }
 
-std::string keytest(Database db){
+namespace KeySort::Getter{
+
+std::string FileExtension(Database db){
     return db.filedir.FileExtension;
+}
+
+char Lexical(Database db){
+    return db.filedir.FileName[0];
+}
+
 }

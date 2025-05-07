@@ -121,6 +121,7 @@ namespace { //internal, only visible in this file
                 db[currentsize].type = file;
                 strcpy(db[currentsize].filedir.Directory, dirname);
                 strcpy(db[currentsize].filedir.FileName, filename);
+                db[currentsize].filedir.FileName[MAX_FILENAME-1] = '\0';
                 const char* temp = GetExtension(filename);
                 strncpy(db[currentsize].filedir.FileExtension, temp, MAX_EXTENSION);//NULL of ext too long
                 db->currentSize++;
