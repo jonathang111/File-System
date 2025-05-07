@@ -2,31 +2,19 @@
 #define FILEREAD
 #include "../GeneralItems.h"
 
-class Foldirs{
-    private:
-    Database* db;
+namespace Foldirs{ //usable
+    Database* InitializeDatabase();
+    void ReadDirectory(Database*&, const char*);
+    void PrintSize(Database*&);
+    void PrintDatabase(Database*&);
+}
 
-    //AUX functions
+namespace { //internal
     int AppendPath(const char* dir, const char* filename, char* out);
     void ClearChunk(Database*&, int);
     void IncreaseDB(Database*&);
     char const* GetExtension(const char*);
     void EntryAllocate(Database*&, int, int);
-    
-    //main functions
-    Database* InitializeDatabase();
     void AddToDB(Database*&, const char*, const char*);
-    void ReadDirectory(Database*&, const char*);
-
-    public:
-    Foldirs(const char* rd){
-        db = InitializeDatabase();
-        ReadDirectory(db, rd);
     }
-    
-    Database* getDatabase();
-    void PrintSize();
-    void PrintDatabase();
-};
-
 #endif

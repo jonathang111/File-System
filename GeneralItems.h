@@ -18,7 +18,6 @@
 #define MAX_FILENAME 128
 #define MAX_DBCHUNK 4096
 #define MAX_EXTENSION 32
-#define MAX_KEYSIZE 15
 
 #define REDUNFILES(x) strcmp(x, ".") == 0 || strcmp(x, "..") == 0
 
@@ -32,6 +31,7 @@ struct Entry{
     char* Directory;
     char* FileName;
     char* FileExtension;
+    bool isHidden;
 };
 
 struct Database{

@@ -1,22 +1,22 @@
 #include "CacheReadWrite/CacheRW.h"
 #include "DBConstruction/FileRead.h"
 #include "KeyAndSort/KeySort.h"
-//if using mac compile with c++17, use clang++ -std=c++17, i will be working on  make file tho
+
 int main(){
     std::cout << "starting read..." << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    Foldirs test("/Library");
+    Database* db = Foldirs::InitializeDatabase();
+    Foldirs::ReadDirectory(db, "/Library");
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-
     std::cout << "done reading" << std::endl;
+
     //test.PrintDatabase();
     std::cout << "Files stored: ";
-    test.PrintSize();
     std::cout << "Time Reading Files: " << elapsed.count() << std::endl;
-    Database* temp = test.getDatabase();
 
+    Database* temp = db;
     std::cout << "sorting data" << std::endl;
     SortDB(fileType, temp);
 
