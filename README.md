@@ -1,41 +1,104 @@
 # File-System
 Current TO DOS:
 1. Create key sorts for multiple sorting types, then upload to cache.
-2. Handle extensions with multiple '.'
+2. File manager class encompassing all other files 
+3. Handle extensions with multiple '.'
 4. QT framework
+5. fix RAII in db construct.
 
 Finished TO DOS:
+- DBConstruct changed to namespace
+- Cache write and read functions.
 - symlink issues, fixed using lstat() instead
 - memleak
 - database creation
 
 Notes:
-As of this moment i need to figure out how to sort, cache, and isolate specific file types. Should i create a filter which reprocesses the db and filters the file types i allow?
 
 Cache Layout:
-Header:
-    magic: "0xFDB,0x01" //just a beginning tag, use to veirfy correct cache.
-    section count: 8
-SectionHeader[0]:
-    name: "all"
-    offset: 8 + sizeof(SectionHeader) * 8
-    count: 176000
-SectionHeader[1]:
-    name: "PDF"
-    offset: 8 + sizeof(SectionHeader) * 8 + sizeof(Entry) * 176000
-    count 1200
-SectionHeader[2]:
-    etc...
+CacheHeader:
+    tag: "CBFE"         // Cache tag, use to verify correct cache type/filter
+    key amount:         // the amount of keys in the cache, also how many key indices
+    entry amount:       // the amount of entries in the cache
+    version:            //just the version of the cache, possible used to auto update cache?
+    date:               //date of cache creation
+KeyIndexEntry:
+    key[MAX_KEYSIZE]:   //key name, maybe varies on cache or standardized
+    offset:             //offset in cache of key values
+    count:              //number of values in the key
+Entries:
+    //Entries start at sizeof(header) * sizeof(KeyIndexEntry) * key amount
+    //these entries will be stored in conotinous blocks,
+    // so keeping track of offset and size while reading is vital
 
-Possible section with directories keyed, each diretory holds some link to the files (maybe reference back to "all" section?) in the directory. So when user requests to see other files in directory, just hash the dir name and use that section to find all other files, then load and show to user.
+
+For now all filters should have their own cache. In order to link them however, such as wanting to find pdf in /Desktop, i can create a intersect function that will compare two different databases
+
+The manager class should manage the CacheDBs by deleting older unused ones. For example, when a user calls to see files by extension, then an array should be made holding entries pertaining to that. Then if they never access the array again after some time, just delete. Or if the max is hit, then delete by LRU.
 
 Another problem is when the WSL needs to access mnt/whatever; at this point it needs to go through multiple virtual layers leading to higher latency when using lstat or opendir. Just for reference, on comparable hardware it takes a WSL ~800 secs to scan ~600k files and the mac 85 sceonds to do ~1mil files.
 
-Cannot replace memcpy, the problem is that in a WSL memory isn't freed until program end. Meaning that if i delete each individual allocated memory in the Entry structure for each index, then it means I'm effectively "freeing" something that can't be used. This translates to double the memory usage every IncreaseDB since old memory is still technically allocated by the WSL. The best approach is to keep memcpy implemented since the char* are manually allocated with new, thus deleteing the old database with delete[] temp2 won't deallocate those pointers. To do that id have to iterate through all the indecies and manually delete each with delete[], but again the problem is that it isn't really deallocated according to the WSL, just not accessable.
+Not sure about the memcpy situation, it technically works but it goes against RAII. So maybe rework that.
+
 
 One idea to improve the speed of database scanning on WSLs is to use multithreading. 
 Instead of having the database recursively open directories and scan, I could instead place it into a thread-safe queue and let other cores scan the file independently. Would need mutex to gaurd the DB since it would be a shared space.
 
-Map will store each key into a group based on the extension, so all I have to do is create the map, sort the keys of the map by alphabetical order, then insert the map by key while tracking its size, and position in the list.
+Map will compare addresses if you key by char*; use string instead to compare the actual data.
 
-Map will compare addresses if you key by char*, use string instead to compare the actual data.
+Smart manager system:
+Overview:
+The Smart Manager System is a modular backend data engine that functions as an intelligent controller for managing and querying a dynamic filesystem-based dataset. It uses a centralized MainManager that delegates responsibilities to specialized sub-managers, each responsible for their own domain of data—such as file indexing, symbol extraction, tagging, searching, and temporary cache management. The system supports multithreaded operations for high performance and efficient parallel data processing.
+
+Main Manager:
+Acts as the sole orchestrator and gatekeeper of all commands. No sub-manager executes independently—all operations are triggered or coordinated through MainManager.
+
+Responsibilities
+	- Delegates all queries, refreshes, and index-building commands.
+	- Ensures execution order, thread safety, and data validity.
+	- Triggers sub-managers asynchronously (or in parallel) when appropriate.
+	- Maintains global view of system state but holds no direct data itself.
+
+Core Methods
+	- InitializeSubManagers()
+	- DispatchQuery(const Query&)
+	- RefreshAll()
+	- ValidateSystemState()
+	- ParallelTick() — concurrently triggers refresh/maintenance across all sub-managers.
+
+Design Philosophy: “Sub-managers are workers. MainManager is the brain.”
+This enforces clean hierarchy and prevents unauthorized or rogue updates as well as handles multi-threading.
+
+Sub Managers:
+DBManager:  	            Filesystem abstraction and metadata persistence (MainDB)
+SymbolIndexer:	            Extracts and caches functions/classes
+TagManager:     	        Stores user-defined semantic labels
+SearchCacheManager:	        Holds recent query results
+IntersectManager:	        Handles set logic on filtered datasets
+MetaDB:         	        Validates and compares against live data
+(Planned) HistoryManager:	Logs and replays commands
+(Planned) StatManager:	    Analyzes and stores codebase metrics
+
+Each of these implements a consistent sub-database interface, allowing MainManager to control them uniformly.
+
+Smart Cache:
+Efficiently reuse bin space, reduce fragmentation, and avoid unnecessary rewrites by using key-index chaining and validity metadata.
+    Idea:
+	- When updating or writing a key:
+	- The system scans all KeyIndexEntry records for that key.
+	- If an invalid entry is found that has enough space, it is reused.
+	- Otherwise, the system appends a new entry to the end of the .bin.
+	- All validity is cross-checked against MetaDB (e.g., by hash, size, or modified time).
+
+    Validation Triggers:
+	- Manually triggered
+	- Periodically (via MainManager::ValidateCaches(), some auto trigger)
+	- On key update
+	- At startup if stale cache is suspected
+
+Mult-threading:
+Each sub-manager can be safely run on its own thread (or thread pool) because their domains are disjoint.
+    Main Manager Roles:
+    - Spawns threads during ParallelTick()
+	- Joins threads before returning control
+	- Manages mutexes or synchronization wrappers for shared data writes
