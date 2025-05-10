@@ -56,6 +56,9 @@ Idea being that you can dynamically add new keys if need and also dynamically st
 
 For now all filters should have their own cache. In order to link them however, such as wanting to find pdf in /Desktop, i can create a intersect function that will compare two different databases
 
+CacheRW inteface StorageInterface. The idea is that you are able to inerface it with the defined functions to override them. Then cacheRW utilizes the class defintions to write/read/ or whatever. This decouples from the previous version where it was tied to fstream. Now in memory writing is allowed, network socket storage, encryption, and cmopressed storage is allowed. They all require different methods for writing and such so they wouldn't work with fstream.
+	Be sure to leverage the vtable, without it CacheRW wouldn't be able to access the functions without some sort of downcasting!!!
+
 The manager class should manage the CacheDBs by deleting older unused ones. For example, when a user calls to see files by extension, then an array should be made holding entries pertaining to that. Then if they never access the array again after some time, just delete. Or if the max is hit, then delete by LRU.
 
 Another problem is when the WSL needs to access mnt/whatever; at this point it needs to go through multiple virtual layers leading to higher latency when using lstat or opendir. Just for reference, on comparable hardware it takes a WSL ~800 secs to scan ~600k files and the mac 85 sceonds to do ~1mil files.

@@ -2,6 +2,7 @@
 #include "CacheReadWrite/Internal.h"
 #include "DBConstruction/FileRead.h"
 #include "KeyAndSort/KeySort.h"
+#include "CacheReadWrite/FileStorage.h"
 
 int main(){
     std::cout << "starting read..." << std::endl;
@@ -21,9 +22,16 @@ int main(){
     Database* temp = db;
     std::cout << "sorting data" << std::endl;
     std::unordered_map<char, std::vector<Entry>> map = KeySort::mapDB<char, Entry>(KeySort::lexical, temp);
-    CacheRW::StoreToCache(map, "dbcachetest.bin");
 
-    auto result = CacheRW::ReadCacheMetaData<char, Entry>("dbcachetest.bin");
+    FileStorage obj;
+    obj.open("dbcachetest.bin", std::ios::binary);
+    if(obj.isOpen()){
+        CacheRW::StoreToCache(map, obj);
+        std::cout << "Data stored\n";
+    }
+
+    std::cout << "Loading data from cache\n";
+    auto result = CacheRW::ReadCacheMetaData(obj);
     if(result.has_value()){
         CacheRW::CacheMeta cacheMetaData = *result;
         auto result2 = CacheRW::GetFooterArray(cacheMetaData);
@@ -33,7 +41,7 @@ int main(){
                 std::cout << keyIndex[i] << ", ";
             std::cout << std::endl;
 
-            auto values = CacheRW::ReadKeyValues<Entry>(cacheMetaData, keyIndex[0]);
+            auto values = CacheRW::ReadKeyValues<Entry>(keyIndex[0], obj);
             if(values.has_value()){
                 Entry* keyVals = *values;
                 for(int i = 0; i < keyIndex[0].count; i++)

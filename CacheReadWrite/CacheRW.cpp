@@ -21,6 +21,20 @@ std::ostream& operator<<(std::ostream& os, const KeyIndexEntry& entry){ //quick 
     return os;
 }
 
+std::optional<CacheMeta> ReadCacheMetaData(StorageInterface& storage){ //optional returns pointer to cacheDB or nothing.
+    CacheHeader header;
+
+    if(!storage.isOpen()){ //maybe remove or somehow add name of file.
+        std::cout << "Could not open file\n";
+         return {};
+    }
+    storage.seek(0);
+    storage.read(&header, sizeof(CacheHeader));
+    std::string name = storage.getLabel();
+    CacheMeta output(header, name.c_str());
+    return output;
+}
+
 auto GetFooterArray(CacheMeta cacheMetaData)
     -> std::optional<KeyIndexEntry*>{
     std::ifstream file(cacheMetaData.cacheName, std::ios::binary);

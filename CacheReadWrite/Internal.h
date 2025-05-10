@@ -26,20 +26,17 @@ namespace CacheRW::Internal{
     void UpdateKeyEntries(KeyIndexEntry*& keyIndex);
 
     template<typename V>
-    size_t StoreEntries(V entry, size_t offset, std::ofstream& cacheFile){
-        size_t currentoffset = offset;
+    void StoreEntries(V entry, StorageInterface& storage){
         using ValueType = typename V::value_type;
-        cacheFile.seekp(currentoffset);
 
         if constexpr(is_vector<V>::value){
-            cacheFile.write(reinterpret_cast<const char*>(entry.data()), sizeof(ValueType) * entry.size());
+            storage.write(entry.data(), sizeof(ValueType) * entry.size());
         }
         else if constexpr(is_raw_pointer<V>::value){
-            cacheFile.write(reinterpret_cast<const char*>(entry), sizeof(ValueType));   
+            storage.write(entry, sizeof(ValueType));   
         }
 
-        currentoffset = cacheFile.tellp();
-        return currentoffset;
+        //return storage.tell(); //may not even need this either
     }
 
     
@@ -70,10 +67,9 @@ namespace CacheRW::Internal{
     }
 
     template<typename K, typename V>
-    void StoreUnorderedMap(std::unordered_map<K, V> map, const char* inputFile){ //must be map with vector value
-        std::ofstream cacheFile(inputFile, std::ios::binary);
-        if(!cacheFile.is_open()){
-            std::cerr << "File " << inputFile << " could not be opened\n";
+    void StoreUnorderedMap(std::unordered_map<K, V> map, StorageInterface& storage){ //must be map with vector value
+        if(!storage.isOpen()){
+            std::cerr << "File " << storage.getLabel() << " could not be opened\n";
             return;
         }
         
@@ -82,24 +78,28 @@ namespace CacheRW::Internal{
             std::cerr << "Warning: storing empty map\n";
 
         CacheRW::CacheHeader header = {MAP_TAG, keycount, 0, VERSION, DATE};
-        size_t currentoffset = sizeof(CacheHeader);
+        //size_t currentoffset = sizeof(CacheHeader);
+        storage.seek(sizeof(CacheHeader));
         KeyIndexEntry* keyentries = new KeyIndexEntry[keycount];
-        using ValueType = typename V::value_type;
+        using ValueType = typename V::value_type; //may not need
 
         int p = 0;
 
         for(auto it = map.begin(); it != map.end(); it++, p++){
-            UpdateKeyEntries(keyentries[p], it->first, currentoffset, it->second.size());
+            UpdateKeyEntries(keyentries[p], it->first, storage.tell(), it->second.size());
             header.entryamt += it->second.size();
-            currentoffset = StoreEntries(it->second, currentoffset, cacheFile);
+            StoreEntries(it->second, storage);
         }
-
-        header.footerStart = ComputeOffset(currentoffset);
-        cacheFile.seekp(0);
-        cacheFile.write(reinterpret_cast<const char*>(&header), sizeof(CacheHeader));
-        cacheFile.seekp(header.footerStart);
-        cacheFile.write(reinterpret_cast<const char*>(keyentries), keycount * sizeof(KeyIndexEntry));
-        cacheFile.close();
+        // auto it = map.begin();
+        //     UpdateKeyEntries(keyentries[0], it->first, storage.tell(), it->second.size());
+        //     header.entryamt += it->second.size();
+        //     StoreEntries(it->second, storage);
+        
+        header.footerStart = ComputeOffset(storage.tell());
+        storage.seek(0);
+        storage.write(&header, sizeof(CacheHeader));
+        storage.seek(header.footerStart);
+        storage.write(keyentries, keycount * sizeof(KeyIndexEntry));
             
         delete[] keyentries;
     }

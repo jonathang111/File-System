@@ -3,8 +3,6 @@
 #include "../GeneralItems.h"
 #include "../CacheReadWrite/CacheRW.h"
 
-//internal functions
-
 namespace KeySort::Support{
 
     template<typename KeyFunc>

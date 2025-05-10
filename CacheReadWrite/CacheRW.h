@@ -8,6 +8,8 @@
 #include <fstream>
 #include <optional>
 #include <cstring>
+#include "StorageInterface.h"
+#include "FileStorage.h"
 
 #define MAX_KEYSIZE 32
 #define BLOCK_SIZE 4096
@@ -68,7 +70,7 @@ namespace Internal{
     void StoreVectorPair(std::vector<K,V>, const char*); //distinguish between vector pair vs lone vector for loadunorderdmap internal
     
     template<typename K, typename V>
-    void StoreUnorderedMap(std::unordered_map<K, V>, const char*);
+    void StoreUnorderedMap(std::unordered_map<K, V>, StorageInterface&);
 }
 
 
@@ -76,61 +78,42 @@ auto GetFooterArray(CacheMeta cacheMetaData)
     -> std::optional<KeyIndexEntry*>;
 
 template<typename Structure>
-void StoreToCache(Structure loadingStruct, const char* cacheFile){
+void StoreToCache(Structure loadingStruct, StorageInterface& storage){
     if constexpr(CacheRW::Internal::is_map<Structure>::value)
-        CacheRW::Internal::StoreUnorderedMap(loadingStruct, cacheFile);
+        CacheRW::Internal::StoreUnorderedMap(loadingStruct, storage);
     else if constexpr(CacheRW::Internal::is_vector<Structure>::value)
-        CacheRW::Internal::StoreVectorPair(loadingStruct, cacheFile);
+        CacheRW::Internal::StoreVectorPair(loadingStruct, storage.getLabel().c_str(), storage);
     else
         std::cout << "Unsupported loading structure\n";
 
 }
 
-template<typename keyType, typename valueType>
-auto ReadCacheMetaData(const char* cacheFile)
-    -> std::optional<CacheMeta> { //optional returns pointer to cacheDB or nothing.
-    CacheHeader header;
-    KeyIndexEntry keyindex;
 
-    std::ifstream file(cacheFile, std::ios::binary);
-    if(file.is_open()){
-        file.read(reinterpret_cast<char*>(&header), sizeof(CacheHeader)); //read header
-        CacheMeta output(header, cacheFile);
-
-        file.close();
-        return output;
-    }
-    return {};
-}
+std::optional<CacheMeta> ReadCacheMetaData(StorageInterface&);
 
 template<typename returnType> //ensure free values
-auto ReadKeyValues(CacheMeta cacheMetaData, KeyIndexEntry keyIndex) //use constexpr to create option CacheDB input or const char* input
+auto ReadKeyValues(KeyIndexEntry keyIndex, StorageInterface& storage) //use constexpr to create option CacheDB input or const char* input
     -> std::optional<returnType*> {
+    
     if(keyIndex.count <= 0){
         std::cout << "Invalid key index\n";
         return {};
     }
     returnType* values = new returnType[keyIndex.count];
-    std::ifstream file(cacheMetaData.cacheName, std::ios::binary);
-    if(file.is_open()){
-        file.seekg(keyIndex.offset);
-        if(!file){
-            std::cout << "Bad file offset\n";
-            delete[] values;
-            return {};
-        }
-        file.read(reinterpret_cast<char*>(values), sizeof(returnType) * keyIndex.count);
-        if(!file){
-            std::cout << "Bad file offset\n";
-            delete[] values;
-            return {};
-        }
-        file.close();
-        return values;
+    if(!storage.isOpen()){
+        std::cout << "Could not open " << storage.getLabel() << std::endl;
+        return {};
     }
-    std::cout << "Could not open " << cacheMetaData.cacheName << std::endl;
-    return {};
 
+    storage.seek(keyIndex.offset);
+    if(storage.eof()){
+        std::cout << "Bad file offset\n";
+        delete[] values;
+        return {};
+    }
+
+    storage.read(values, sizeof(returnType) * keyIndex.count);
+    return values;
 } 
 
 std::ostream& operator<<(std::ostream& os, const KeyIndexEntry& entry);
