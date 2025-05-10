@@ -4,12 +4,13 @@
 #include "../CacheReadWrite/CacheRW.h"
 
 //internal functions
+
 namespace KeySort::Support{
 
     template<typename KeyFunc>
     auto GroupEntries(Database*& db, KeyFunc keyFn) 
         -> std::unordered_map<decltype(keyFn(db[0])), std::vector<Entry>> 
-    {
+    {   
         using KeyType = decltype(keyFn(db[0]));
         std::unordered_map<KeyType, std::vector<Entry>> temp;
 
@@ -51,12 +52,13 @@ namespace KeySort{
                 if(!map2.empty())
                 Support::SortvalbyLexical(map2);
             }
-            else std::cout << "Incorrect type for lexical\n";
+            else std::cout << "Incorrect map types for lexical\n";
             return map2;
 
             case fileExtension: 
             if constexpr (std::is_same<keyType, std::string>::value && std::is_same<valueType, Entry>::value)
                 map2 = Support::GroupEntries(db, Getter::FileExtension);
+            else std::cout << "Incorrect map types for file extension\n";
             return map2;
 
             case fileSize: return map2;

@@ -5,7 +5,7 @@ namespace Foldirs{
     Database* InitializeDatabase(){
         Database* db = new Database[MAX_DBCHUNK];
         ClearChunk(db, 0);
-        EntryAllocate(db, 0, MAX_DBCHUNK);
+        // EntryAllocate(db, 0, MAX_DBCHUNK);
         db->currentSize = 0;
         db->maxSize = 1024;
         return db;
@@ -78,9 +78,10 @@ namespace { //internal, only visible in this file
         Database* temp2 = db;
     
         ClearChunk(temp, db->currentSize);
-        EntryAllocate(temp, db->currentSize, MAX_DBCHUNK + db->currentSize);
-        memcpy(temp, db, (sizeof(Database) * db->currentSize));
+        // EntryAllocate(temp, db->currentSize, MAX_DBCHUNK + db->currentSize);
+        // memcpy(temp, db, (sizeof(Database) * db->currentSize));
         //this will be better managed later, i promsie!
+        DeepEntryCopy(temp, db);
     
         temp->currentSize = db->currentSize;
         temp->maxSize = db->maxSize + MAX_DBCHUNK;
@@ -94,13 +95,13 @@ namespace { //internal, only visible in this file
         return temp + 1;
     }
 
-    void EntryAllocate(Database*& db, int start, int end){
-        for(int i = start; i < end; i++){
-            db[i].filedir.Directory = new char[MAX_DIRECTORY];
-            db[i].filedir.FileName = new char[MAX_FILENAME];
-            db[i].filedir.FileExtension = new char[MAX_EXTENSION];
-        }
-    }
+    // void EntryAllocate(Database*& db, int start, int end){
+    //     for(int i = start; i < end; i++){
+    //         db[i].filedir.Directory = new char[MAX_DIRECTORY];
+    //         db[i].filedir.FileName = new char[MAX_FILENAME];
+    //         db[i].filedir.FileExtension = new char[MAX_EXTENSION];
+    //     }
+    // }
 
     void AddToDB(Database*& db, const char* dirname, const char* filename){
         int currentsize = db->currentSize;
@@ -136,4 +137,12 @@ namespace { //internal, only visible in this file
         delete[] path;
     }
 
+    void DeepEntryCopy(Database*& newone, Database*& oldone){
+        for(int i = 0; i < oldone->currentSize; i++){
+            newone[i].type = oldone[i].type;
+            strcpy(newone[i].filedir.Directory, oldone[i].filedir.Directory);
+            strcpy(newone[i].filedir.FileExtension, oldone[i].filedir.FileExtension);
+            strcpy(newone[i].filedir.FileName, oldone[i].filedir.FileName);
+        }
+    }
 }

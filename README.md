@@ -1,17 +1,28 @@
 # File-System
 Current TO DOS:
-1. Create key sorts for multiple sorting types, then upload to cache.
+1. Add constexpr in ReadKeyValues
 2. File manager class encompassing all other files 
 3. Handle extensions with multiple '.'
 4. QT framework
 5. fix RAII in db construct.
+6. Ensure all values are freed when needed.
+7. Create quick debugging tools since we're heading into the more abstract stage
+8. Introduce padding to reg cache write
+9. separate functions for writing header and entries.
+10. Need to refactor DBConstruction, it is WAYYYYY too dependent structs.
+	-make it more abstract and modular like cacherw
+11. Finish CacheRW input cases
+12. implement unique/shared pointers instead of current implementation for safety
 
 Finished TO DOS:
+- Create key sorts for multiple sorting types, then upload to cache.
 - DBConstruct changed to namespace
 - Cache write and read functions.
 - symlink issues, fixed using lstat() instead
 - memleak
 - database creation
+- Need to rework Entries. You can't reload pointers from cache, they will be undefined pointers.
+	- deep copy added, memory situation still unknown
 
 Notes:
 
@@ -21,8 +32,8 @@ CacheHeader:
     key amount:         // the amount of keys in the cache, also how many key indices
 	offset to keyindx:	// Absolute offset to the footer/key index start
     entry amount:       // the amount of entries in the cache
-    version:            //just the version of the cache, possible used to auto update cache?
-    date:               //date of cache creation
+    version:            // just the version of the cache; used in validity manager?
+    date:               // date of cache creation
 
 Entries:
     //Entries start at sizeof(header)
@@ -32,9 +43,9 @@ Entries:
 [padding/gap]	//should have enough room between entries and keyindex's so rewrites aren't common
 
 KeyIndexEntry[0]:
-    key[MAX_KEYSIZE]:   //key name, maybe varies on cache or standardized
-    offset:             //offset in cache of key values
-    count:              //number of values in the key
+    key[MAX_KEYSIZE]:   // key name, maybe varies on cache or standardized
+    offset:             // offset in cache of key values
+    count:              // number of values in the key
 KeyIndexEntry[1]:
 	key[MAX_KEYSIZE]:  
     offset:         
@@ -82,6 +93,7 @@ This enforces clean hierarchy and prevents unauthorized or rogue updates as well
 
 Sub Managers:
 DBManager:  	            Filesystem abstraction and metadata persistence (MainDB)
+<?> Vailidity Manager:			Ensures updated and correct database information
 SymbolIndexer:	            Extracts and caches functions/classes
 TagManager:     	        Stores user-defined semantic labels
 SearchCacheManager:	        Holds recent query results

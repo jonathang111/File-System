@@ -31,6 +31,8 @@ std::string FileExtension(Database db){
 }
 
 char Lexical(Database db){
+    if(db.filedir.FileName[0] >= 65 && db.filedir.FileName[0] <= 90)
+        return db.filedir.FileName[0] + 32;
     return db.filedir.FileName[0];
 }
 

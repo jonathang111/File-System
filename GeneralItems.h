@@ -12,6 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <optional>
+#include <algorithm>
 
 #define MAX_PATHSIZE 512
 #define MAX_DIRECTORY 256
@@ -28,9 +29,9 @@ typedef enum{
 } FileType;
 
 struct Entry{
-    char* Directory;
-    char* FileName;
-    char* FileExtension;
+    char Directory[MAX_DIRECTORY];
+    char FileName[MAX_FILENAME];
+    char FileExtension[MAX_EXTENSION];
     bool isHidden;
 };
 

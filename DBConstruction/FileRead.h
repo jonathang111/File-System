@@ -14,7 +14,8 @@ namespace { //internal
     void ClearChunk(Database*&, int);
     void IncreaseDB(Database*&);
     char const* GetExtension(const char*);
-    void EntryAllocate(Database*&, int, int);
+    // void EntryAllocate(Database*&, int, int);
+    void DeepEntryCopy(Database*&, Database*&);
     void AddToDB(Database*&, const char*, const char*);
     }
 #endif
