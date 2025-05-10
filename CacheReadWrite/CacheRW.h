@@ -111,7 +111,7 @@ auto ReadKeyValues(KeyIndexEntry keyIndex, StorageInterface& storage) //use cons
         delete[] values;
         return {};
     }
-
+    //ONLY USE DEREF ON NON POINTER TO WRITE TO THEM!!!! THIS PROBLEM TOOK FOREVER TO SOLVE!!!!!!!!!!
     storage.read(values, sizeof(returnType) * keyIndex.count);
     return values;
 } 
