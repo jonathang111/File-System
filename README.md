@@ -13,6 +13,7 @@ Current TO DOS:
 	-make it more abstract and modular like cacherw
 11. Finish CacheRW input cases
 12. implement unique/shared pointers instead of current implementation for safety
+13. fix unit_8 for certain filename keys like % in lexical sort
 
 Finished TO DOS:
 - Create key sorts for multiple sorting types, then upload to cache.
